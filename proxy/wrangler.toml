@@ -1,0 +1,9 @@
+name = "pointe-pco-proxy"
+main = "src/index.ts"
+compatibility_date = "2026-04-01"
+
+# Secrets (set via `wrangler secret put PCO_APP_ID` and `wrangler secret put PCO_SECRET`)
+# do not go here.
+
+[observability]
+enabled = true

@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "The Pointe Church",
+    "slug": "pointe-app",
+    "scheme": "pointeapp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#fafaf9"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "io.pushpay.thepointechurchcocoabeach"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#fafaf9"
+      },
+      "package": "io.pushpay.thepointechurchcocoabeach",
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-web-browser",
+      "expo-font"
+    ],
+    "extra": {
+      "pcoClientId": "17f1e5705e073677a957163b4bd2e2fbdf376b515665b9e2842d6dcec555b3e6",
+      "youtubeApiKey": "AIzaSyDJef3vhesMjvtCSDMSnZUMOnvCpqVtBtM",
+      "youtubeChannelHandle": "@thepointechurch4274",
+      "pushpayUrl": "https://pushpay.com/g/thepointechurchcb",
+      "proxyUrl": "https://pointe-pco-proxy.thepointechurch.workers.dev",
+      "youversionUrl": "https://www.bible.com/events/49603283"
+    }
+  }
+}
