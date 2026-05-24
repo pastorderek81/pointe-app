@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Card } from '../components/Card';
-import { PrimaryButton } from '../components/PrimaryButton';
-import { colors, radius, shadow, spacing, typography } from '../theme';
-import { config } from '../config';
+import { Card } from '../../components/Card';
+import { PrimaryButton } from '../../components/PrimaryButton';
+import { Palette, radius, shadow, spacing, Typography, useColors, useTypography } from '../../theme';
+import { config } from '../../config';
 
 export function GivingScreen() {
+  const colors = useColors();
+  const typography = useTypography();
+  const styles = useMemo(() => makeStyles(colors, typography), [colors, typography]);
   const open = () => Linking.openURL(config.pushpayUrl);
 
   return (
@@ -72,37 +75,39 @@ export function GivingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.paper },
-  header: {
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.lg,
-  },
-  heroCard: {
-    backgroundColor: colors.peachSoft,
-    borderRadius: radius.lg,
-    padding: spacing.lg,
-    borderWidth: 1,
-    borderColor: colors.peach,
-  },
-  heroTitle: {
-    ...typography.h1,
-    color: colors.peachInk,
-    fontSize: 28,
-    lineHeight: 33,
-  },
-  heroBody: {
-    ...typography.body,
-    color: colors.peachInk,
-    opacity: 0.85,
-    marginTop: spacing.sm,
-  },
-  poweredBy: {
-    ...typography.small,
-    color: colors.peachInk,
-    opacity: 0.7,
-    textAlign: 'center',
-    marginTop: spacing.md,
-  },
-});
+function makeStyles(colors: Palette, typography: Typography) {
+  return StyleSheet.create({
+    safe: { flex: 1, backgroundColor: colors.paper },
+    header: {
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.md,
+      paddingBottom: spacing.lg,
+    },
+    heroCard: {
+      backgroundColor: colors.peachSoft,
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      borderWidth: 1,
+      borderColor: colors.peach,
+    },
+    heroTitle: {
+      ...typography.h1,
+      color: colors.peachInk,
+      fontSize: 28,
+      lineHeight: 33,
+    },
+    heroBody: {
+      ...typography.body,
+      color: colors.peachInk,
+      opacity: 0.85,
+      marginTop: spacing.sm,
+    },
+    poweredBy: {
+      ...typography.small,
+      color: colors.peachInk,
+      opacity: 0.7,
+      textAlign: 'center',
+      marginTop: spacing.md,
+    },
+  });
+}

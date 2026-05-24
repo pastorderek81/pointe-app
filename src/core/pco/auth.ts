@@ -8,7 +8,7 @@
 // Then drop the client ID into app.json `extra.pcoClientId`.
 import * as AuthSession from 'expo-auth-session';
 import * as SecureStore from 'expo-secure-store';
-import { config } from '../config';
+import { config } from '../../config';
 
 const DISCOVERY = {
   authorizationEndpoint: 'https://api.planningcenteronline.com/oauth/authorize',
@@ -16,7 +16,14 @@ const DISCOVERY = {
   revocationEndpoint: 'https://api.planningcenteronline.com/oauth/revoke',
 };
 
-export const PCO_SCOPES = ['people', 'groups', 'calendar', 'services', 'check_ins'];
+export const PCO_SCOPES = [
+  'people',
+  'groups',
+  'calendar',
+  'services',
+  'check_ins',
+  'registrations', // for sign-ups (Events tab)
+];
 
 const TOKEN_KEY = 'pco_tokens_v1';
 

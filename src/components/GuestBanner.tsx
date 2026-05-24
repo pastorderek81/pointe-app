@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, radius, spacing, typography } from '../theme';
+import { Palette, radius, spacing, Typography, useColors, useTypography } from '../theme';
 
 // Small "Sign in for more" prompt shown above Groups/Events lists when the
 // user is browsing as a guest. Read-only data still loads — this just nudges
 // them toward sign-in for RSVPs, group joining, etc.
 export function GuestBanner({ onSignIn, configured }: { onSignIn: () => void; configured: boolean }) {
+  const colors = useColors();
+  const typography = useTypography();
+  const styles = useMemo(() => makeStyles(colors, typography), [colors, typography]);
   return (
     <Pressable
       onPress={onSignIn}
@@ -26,22 +29,24 @@ export function GuestBanner({ onSignIn, configured }: { onSignIn: () => void; co
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.inkDeep,
-    borderRadius: radius.md,
-    padding: spacing.md,
-    marginHorizontal: spacing.lg,
-    marginBottom: spacing.md,
-    gap: spacing.md,
-  },
-  title: { ...typography.h3, color: colors.peach },
-  body: {
-    ...typography.small,
-    color: colors.inkMuted,
-    marginTop: 2,
-  },
-  chev: { fontSize: 22, color: colors.peach, opacity: 0.7 },
-});
+function makeStyles(colors: Palette, typography: Typography) {
+  return StyleSheet.create({
+    wrap: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.inkDeep,
+      borderRadius: radius.md,
+      padding: spacing.md,
+      marginHorizontal: spacing.lg,
+      marginBottom: spacing.md,
+      gap: spacing.md,
+    },
+    title: { ...typography.h3, color: colors.peach },
+    body: {
+      ...typography.small,
+      color: colors.inkMuted,
+      marginTop: 2,
+    },
+    chev: { fontSize: 22, color: colors.peach, opacity: 0.7 },
+  });
+}

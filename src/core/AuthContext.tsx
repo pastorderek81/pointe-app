@@ -1,7 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import { clearTokens, exchangeCode, loadTokens, useAuthRequest } from './pco/auth';
-import { config, isPlaceholder } from './config';
+import { config, isPlaceholder } from '../config';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -15,9 +15,11 @@ type AuthState = {
   hasOnboarded: boolean;
   loading: boolean;
   configured: boolean;
+  authError: string | null;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
   continueAsGuest: () => void;
+  clearAuthError: () => void;
 };
 
 const Ctx = createContext<AuthState | null>(null);
@@ -26,21 +28,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [signedIn, setSignedIn] = useState(false);
   const [guestSession, setGuestSession] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
   const [request, response, promptAsync] = useAuthRequest();
 
   useEffect(() => {
-    loadTokens().then((t) => {
-      setSignedIn(!!t);
+    // SecureStore can reject (Keychain locked after restore-from-backup, old
+    // iOS biometric edge cases) or — rarely — hang. Either way, never trap
+    // the user on Welcome: time the load out and fall back to signed-out.
+    let cancelled = false;
+    const timeout = setTimeout(() => {
+      if (cancelled) return;
+      console.warn('loadTokens timed out — proceeding signed-out');
+      setSignedIn(false);
       setLoading(false);
-    });
+    }, 3000);
+    loadTokens()
+      .then((t) => {
+        if (cancelled) return;
+        clearTimeout(timeout);
+        setSignedIn(!!t);
+        setLoading(false);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        clearTimeout(timeout);
+        console.warn('loadTokens failed', e);
+        setSignedIn(false);
+        setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
   }, []);
 
   useEffect(() => {
-    if (response?.type === 'success' && request?.codeVerifier) {
+    if (!response) return;
+    if (response.type === 'success' && request?.codeVerifier) {
       const code = response.params.code;
+      setAuthError(null);
       exchangeCode(code, request.codeVerifier)
         .then(() => setSignedIn(true))
-        .catch((e) => console.warn('PCO exchange failed', e));
+        .catch((e) => {
+          const msg = e?.message ?? String(e);
+          setAuthError(`Token exchange failed: ${msg}`);
+          console.warn('PCO exchange failed', e);
+        });
+    } else if (response.type === 'error') {
+      setAuthError(`OAuth error: ${response.error?.message ?? response.params?.error_description ?? 'unknown'}`);
+    } else if (response.type === 'dismiss') {
+      setAuthError('Sign-in cancelled or redirect did not reach app');
     }
   }, [response, request?.codeVerifier]);
 
@@ -62,6 +99,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setGuestSession(true);
   }, []);
 
+  const clearAuthError = useCallback(() => setAuthError(null), []);
+
   const value = useMemo<AuthState>(
     () => ({
       signedIn,
@@ -69,11 +108,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       hasOnboarded: signedIn || guestSession,
       loading,
       configured: !isPlaceholder(config.pcoClientId),
+      authError,
       signIn,
       signOut,
       continueAsGuest,
+      clearAuthError,
     }),
-    [signedIn, guestSession, loading, signIn, signOut, continueAsGuest]
+    [signedIn, guestSession, loading, authError, signIn, signOut, continueAsGuest, clearAuthError]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

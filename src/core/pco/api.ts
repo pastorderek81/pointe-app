@@ -7,7 +7,7 @@
 //
 // Docs: https://developer.planning.center/docs/
 import { loadTokens, refreshIfNeeded } from './auth';
-import { config, isPlaceholder } from '../config';
+import { config, isPlaceholder } from '../../config';
 
 const PCO_BASE = 'https://api.planningcenteronline.com';
 
@@ -36,6 +36,14 @@ function stripHtml(input: string | null | undefined): string | null {
   return text || null;
 }
 
+// Marker class so UI can detect "user must sign in again" vs generic errors.
+export class AuthExpiredError extends Error {
+  constructor(message = 'Your session expired. Please sign in again.') {
+    super(message);
+    this.name = 'AuthExpiredError';
+  }
+}
+
 async function authedFetch(path: string, init: RequestInit = {}) {
   const stored = await loadTokens();
   const headers = new Headers(init.headers as HeadersInit | undefined);
@@ -43,7 +51,13 @@ async function authedFetch(path: string, init: RequestInit = {}) {
 
   let url: string;
   if (stored) {
-    const tokens = await refreshIfNeeded(stored);
+    let tokens;
+    try {
+      tokens = await refreshIfNeeded(stored);
+    } catch (e: any) {
+      // Refresh token missing or rejected — user must re-auth.
+      throw new AuthExpiredError();
+    }
     headers.set('Authorization', `Bearer ${tokens.accessToken}`);
     url = `${PCO_BASE}${path}`;
   } else {
@@ -55,10 +69,18 @@ async function authedFetch(path: string, init: RequestInit = {}) {
 
   const res = await fetch(url, { ...init, headers });
   if (!res.ok) {
+    if (res.status === 401) throw new AuthExpiredError();
     const text = await res.text().catch(() => '');
     throw new Error(`PCO ${res.status}: ${text || res.statusText}`);
   }
   return res.json();
+}
+
+// Defensive: PCO/proxy is supposed to return `{ data: [...] }`, but a
+// malformed response (HTML error page, unexpected wrapper, null) would
+// crash `.map`. Treat anything non-array as empty.
+function asArray<T = any>(v: unknown): T[] {
+  return Array.isArray(v) ? (v as T[]) : [];
 }
 
 export type PcoEvent = {
@@ -79,10 +101,10 @@ export async function fetchUpcomingEvents(): Promise<PcoEvent[]> {
   )}&order=starts_at&per_page=25&include=event`;
   const json = await authedFetch(url);
   const events = new Map<string, any>();
-  for (const inc of json.included ?? []) {
+  for (const inc of asArray(json?.included)) {
     if (inc.type === 'Event') events.set(inc.id, inc);
   }
-  return (json.data ?? []).map((row: any): PcoEvent => {
+  return asArray(json?.data).map((row: any): PcoEvent => {
     const eventId = row.relationships?.event?.data?.id;
     const ev = eventId ? events.get(eventId) : null;
     return {
@@ -112,7 +134,7 @@ const CHURCH_CENTER_BASE = 'https://mypointe.churchcenter.com';
 
 export async function fetchGroups(): Promise<PcoGroup[]> {
   const json = await authedFetch('/groups/v2/groups?per_page=50&order=name');
-  return (json.data ?? []).map(
+  return asArray(json?.data).map(
     (row: any): PcoGroup => ({
       id: row.id,
       name: row.attributes?.name ?? 'Group',
@@ -136,7 +158,8 @@ export type PcoSignup = {
   name: string;
   description: string | null;
   logoUrl: string | null;
-  registrationUrl: string | null;
+  registrationUrl: string | null; // /registrations/events/<id>/reservations/new
+  infoUrl: string | null;         // /registrations/events/<id> — public info page
   createdAt: string | null;
 };
 
@@ -157,17 +180,23 @@ export async function fetchSignups(): Promise<PcoSignup[]> {
     `/registrations/v2/signups?per_page=${perPage}&offset=${offset}`
   );
 
-  const all: PcoSignup[] = (json.data ?? [])
+  const all: PcoSignup[] = asArray(json?.data)
     .filter((row: any) => row.attributes?.archived === false && row.attributes?.closed === false)
     .map(
-      (row: any): PcoSignup => ({
-        id: row.id,
-        name: row.attributes?.name ?? 'Untitled',
-        description: stripHtml(row.attributes?.description),
-        logoUrl: row.attributes?.logo_url ?? null,
-        registrationUrl: row.attributes?.new_registration_url ?? null,
-        createdAt: row.attributes?.created_at ?? null,
-      })
+      (row: any): PcoSignup => {
+        const regUrl: string | null = row.attributes?.new_registration_url ?? null;
+        // Public info page is the registration URL with /reservations/new stripped.
+        const infoUrl = regUrl ? regUrl.replace(/\/reservations\/new\/?$/, '') : null;
+        return {
+          id: row.id,
+          name: row.attributes?.name ?? 'Untitled',
+          description: stripHtml(row.attributes?.description),
+          logoUrl: row.attributes?.logo_url ?? null,
+          registrationUrl: regUrl,
+          infoUrl,
+          createdAt: row.attributes?.created_at ?? null,
+        };
+      }
     );
 
   // Newest first.

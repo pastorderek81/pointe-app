@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors, spacing, typography } from '../theme';
+import { Palette, spacing, Typography, useColors, useTypography } from '../theme';
 
 export function SectionHeader({
   eyebrow,
@@ -13,6 +13,9 @@ export function SectionHeader({
   actionLabel?: string;
   onActionPress?: () => void;
 }) {
+  const colors = useColors();
+  const typography = useTypography();
+  const styles = useMemo(() => makeStyles(colors, typography), [colors, typography]);
   return (
     <View style={styles.wrap}>
       <View style={{ flex: 1 }}>
@@ -28,23 +31,25 @@ export function SectionHeader({
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    paddingHorizontal: spacing.lg,
-    marginTop: spacing.xl,
-    marginBottom: spacing.md,
-  },
-  eyebrow: {
-    ...typography.label,
-    color: colors.skyDeep,
-    marginBottom: spacing.xs,
-  },
-  title: { ...typography.h1 },
-  action: {
-    ...typography.h3,
-    color: colors.skyDeep,
-    fontSize: 14,
-  },
-});
+function makeStyles(colors: Palette, typography: Typography) {
+  return StyleSheet.create({
+    wrap: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      paddingHorizontal: spacing.lg,
+      marginTop: spacing.xl,
+      marginBottom: spacing.md,
+    },
+    eyebrow: {
+      ...typography.label,
+      color: colors.skyDeep,
+      marginBottom: spacing.xs,
+    },
+    title: { ...typography.h1 },
+    action: {
+      ...typography.h3,
+      color: colors.skyDeep,
+      fontSize: 14,
+    },
+  });
+}

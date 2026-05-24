@@ -1,12 +1,12 @@
 import React from 'react';
 import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { HomeScreen } from '../screens/HomeScreen';
-import { MediaScreen } from '../screens/MediaScreen';
-import { GivingScreen } from '../screens/GivingScreen';
-import { GroupsScreen } from '../screens/GroupsScreen';
-import { EventsScreen } from '../screens/EventsScreen';
-import { colors, typography } from '../theme';
+import { HomeScreen } from '../features/home/HomeScreen';
+import { MediaScreen } from '../features/media/MediaScreen';
+import { GivingScreen } from '../features/giving/GivingScreen';
+import { GroupsScreen } from '../features/groups/GroupsScreen';
+import { EventsScreen } from '../features/events/EventsScreen';
+import { useColors, useTypography } from '../theme';
 
 const Tab = createBottomTabNavigator();
 
@@ -18,6 +18,8 @@ function TabIcon({ glyph, color, focused }: { glyph: string; color: string; focu
 }
 
 export function RootTabs() {
+  const colors = useColors();
+  const typography = useTypography();
   return (
     <Tab.Navigator
       screenOptions={{

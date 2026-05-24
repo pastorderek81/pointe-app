@@ -2,8 +2,13 @@ name = "pointe-pco-proxy"
 main = "src/index.ts"
 compatibility_date = "2026-04-01"
 
-# Secrets (set via `wrangler secret put PCO_APP_ID` and `wrangler secret put PCO_SECRET`)
-# do not go here.
+# Secrets (set via `wrangler secret put PCO_APP_ID`, `wrangler secret put PCO_SECRET`,
+# and `wrangler secret put PUSH_BROADCAST_SECRET`) do not go here.
+
+# KV namespace for storing Expo push tokens. Created via `wrangler kv namespace create`.
+[[kv_namespaces]]
+binding = "PUSH_TOKENS"
+id = "2809a6e59380400494755cf75b8064a6"
 
 [observability]
 enabled = true

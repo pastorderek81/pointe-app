@@ -1,9 +1,10 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootTabs } from './RootTabs';
-import { SettingsScreen } from '../screens/SettingsScreen';
-import { WelcomeScreen } from '../screens/WelcomeScreen';
-import { useAuth } from '../AuthContext';
+import { SettingsScreen } from '../features/settings/SettingsScreen';
+import { SeriesDetailScreen } from '../features/media/SeriesDetailScreen';
+import { WelcomeScreen } from '../features/welcome/WelcomeScreen';
+import { useAuth } from '../core/AuthContext';
 
 const Stack = createNativeStackNavigator();
 
@@ -23,6 +24,7 @@ export function RootStack() {
             component={SettingsScreen}
             options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
           />
+          <Stack.Screen name="SeriesDetail" component={SeriesDetailScreen} />
         </>
       ) : (
         <Stack.Screen name="Welcome" component={WelcomeScreen} />

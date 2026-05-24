@@ -1,42 +1,57 @@
 import React from 'react';
-import { ImageBackground, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, ImageBackground, ImageSourcePropType, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radius, spacing, typography } from '../theme';
+import { colors, radius, spacing, typography } from '../../theme';
 import { LiveBadge } from './LiveBadge';
+import { HeroCarousel } from './HeroCarousel';
 
-// Hero shows the full 16:9 series graphic (no crop) with a dark text
-// section below for eyebrow / title / subtitle. Text never overlaps the
-// designed art — same pattern Spotify and Apple Music use for album pages.
+// Hero shows the series graphic (single image or auto-advancing carousel
+// when multiple are set in the admin) at its natural 16:9 ratio, with a
+// small dark top bar above for the gear icon, and a dark gradient text
+// section below for eyebrow / title / subtitle. Status bar padding is
+// handled by an outer SafeAreaView in HomeScreen.
+// TOPBAR_HEIGHT is the gear-icon row height. Bumping it up gives the gear
+// (and the image below it) breathing room from the top of the screen.
+const TOPBAR_HEIGHT = 88;
+
 export function Hero({
-  source,
+  images,
   eyebrow,
   title,
   subtitle,
   isLive,
   rightSlot,
 }: {
-  source: any;
+  // Always at least one image — caller falls back to a bundled asset if
+  // remote content is empty.
+  images: ImageSourcePropType[];
   eyebrow?: string;
   title: string;
   subtitle?: string;
   isLive?: boolean;
   rightSlot?: React.ReactNode;
 }) {
+  // Slightly taller than 16:9 for a more editorial feel — 16:9 source images
+  // get a small ~10% horizontal crop on each side.
+  const baseImageHeight = Math.round((Dimensions.get('window').width * 10) / 16);
+
   return (
     <View style={styles.wrap}>
-      <SafeAreaView edges={['top']} style={styles.topBar}>
+      <View style={[styles.topBar, { height: TOPBAR_HEIGHT }]}>
+        {isLive ? <LiveBadge /> : null}
         <View style={{ flex: 1 }} />
         {rightSlot}
-      </SafeAreaView>
+      </View>
 
-      <ImageBackground source={source} style={styles.art} resizeMode="cover">
-        {isLive ? (
-          <View style={styles.livePos}>
-            <LiveBadge />
-          </View>
-        ) : null}
-      </ImageBackground>
+      {images.length > 1 ? (
+        <HeroCarousel images={images} height={baseImageHeight} />
+      ) : (
+        <ImageBackground
+          source={images[0]}
+          style={[styles.art, { height: baseImageHeight }]}
+          resizeMode="cover"
+        />
+      )}
 
       <LinearGradient
         colors={['rgba(14,17,22,0.96)', colors.inkDeep]}
@@ -61,19 +76,12 @@ const styles = StyleSheet.create({
   },
   topBar: {
     flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.sm,
   },
-  // 16:9 ratio = no crop on a 1920x1080 series graphic.
   art: {
     width: '100%',
-    aspectRatio: 16 / 9,
     backgroundColor: colors.inkSurface,
-  },
-  livePos: {
-    position: 'absolute',
-    top: spacing.md,
-    right: spacing.md,
   },
   textSection: {
     paddingHorizontal: spacing.lg,

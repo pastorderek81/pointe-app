@@ -9,8 +9,8 @@
 //  - The app is offline at first launch (no cached fetch yet)
 //  - The YouTube API key isn't configured
 //  - The fetch fails for any reason
-import { useEffect, useState } from 'react';
-import { fetchCurrentSeries, YouTubeSeries } from './youtube';
+import { useCallback, useEffect, useState } from 'react';
+import { fetchCurrentSeries, YouTubeSeries } from '../media/youtube';
 
 // Used as eyebrow + while loading + on errors.
 export const SERIES_EYEBROW = 'NOW PLAYING';
@@ -31,12 +31,25 @@ export type SeriesState = {
   error?: string;
 };
 
-export function useCurrentSeries(): SeriesState {
+export function useCurrentSeries(): SeriesState & { refresh: () => Promise<void> } {
   const [state, setState] = useState<SeriesState>({
     series: fallbackSeries,
     loading: true,
     fromYouTube: false,
   });
+
+  const refresh = useCallback(async () => {
+    try {
+      const s = await fetchCurrentSeries();
+      setState({ series: s, loading: false, fromYouTube: true });
+    } catch (e: any) {
+      setState((prev) => ({
+        ...prev,
+        loading: false,
+        error: e?.message ?? 'YouTube fetch failed',
+      }));
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -59,5 +72,5 @@ export function useCurrentSeries(): SeriesState {
     };
   }, []);
 
-  return state;
+  return { ...state, refresh };
 }

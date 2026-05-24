@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
-import { colors, radius, spacing, typography } from '../theme';
+import { Palette, radius, spacing, useColors } from '../theme';
 
 export function PrimaryButton({
   label,
@@ -13,6 +13,8 @@ export function PrimaryButton({
   variant?: 'sky' | 'peach' | 'ghost';
   style?: ViewStyle;
 }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const palette = {
     sky: { bg: colors.skyDeep, fg: colors.white, border: colors.skyDeep },
     peach: { bg: colors.peachDeep, fg: colors.white, border: colors.peachDeep },
@@ -33,18 +35,20 @@ export function PrimaryButton({
   );
 }
 
-const styles = StyleSheet.create({
-  btn: {
-    paddingVertical: spacing.md - 2,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  label: {
-    fontFamily: typography.h2.fontFamily,
-    fontSize: 15,
-    letterSpacing: 0.2,
-  },
-});
+function makeStyles(_colors: Palette) {
+  return StyleSheet.create({
+    btn: {
+      paddingVertical: spacing.md - 2,
+      paddingHorizontal: spacing.lg,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    label: {
+      fontFamily: 'Inter_700Bold',
+      fontSize: 15,
+      letterSpacing: 0.2,
+    },
+  });
+}

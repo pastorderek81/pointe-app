@@ -2,16 +2,16 @@ import React from 'react';
 import { ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { PrimaryButton } from '../components/PrimaryButton';
-import { useAuth } from '../AuthContext';
-import { colors, spacing, typography } from '../theme';
+import { PrimaryButton } from '../../components/PrimaryButton';
+import { useAuth } from '../../core/AuthContext';
+import { colors, spacing, typography } from '../../theme';
 
-const HERO = require('../../assets/photo-worship.jpg');
+const HERO = require('../../../assets/photo-worship.jpg');
 
 // First-launch gate. Shown until the user either signs in or chooses to
 // continue as a guest. Choice is persisted so they don't see this every time.
 export function WelcomeScreen() {
-  const { signIn, continueAsGuest, configured } = useAuth();
+  const { signIn, continueAsGuest, configured, authError } = useAuth();
 
   return (
     <View style={styles.root}>
@@ -35,6 +35,13 @@ export function WelcomeScreen() {
               Sign in with your Planning Center account for groups, events, and your
               account — or browse as a guest.
             </Text>
+
+            {authError ? (
+              <View style={styles.errorBanner}>
+                <Text style={styles.errorTitle}>Sign-in failed</Text>
+                <Text style={styles.errorBody}>{authError}</Text>
+              </View>
+            ) : null}
 
             <PrimaryButton
               label={configured ? 'Sign in with Planning Center' : 'Sign-in not yet configured'}
@@ -111,5 +118,25 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.5)',
     textAlign: 'center',
     marginTop: spacing.sm,
+  },
+  errorBanner: {
+    backgroundColor: 'rgba(230, 57, 70, 0.18)',
+    borderColor: 'rgba(230, 57, 70, 0.7)',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: spacing.md,
+    marginTop: spacing.md,
+  },
+  errorTitle: {
+    ...typography.h3,
+    color: '#fca5a5',
+    fontSize: 13,
+  },
+  errorBody: {
+    ...typography.small,
+    color: 'rgba(255,255,255,0.95)',
+    fontSize: 12,
+    marginTop: spacing.xs,
+    lineHeight: 17,
   },
 });

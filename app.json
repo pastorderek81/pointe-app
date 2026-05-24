@@ -3,7 +3,7 @@
     "name": "The Pointe Church",
     "slug": "pointe-app",
     "scheme": "pointeapp",
-    "version": "1.0.0",
+    "version": "16.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -15,7 +15,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "io.pushpay.thepointechurchcocoabeach"
+      "bundleIdentifier": "io.pushpay.thepointechurchcocoabeach",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -40,7 +43,16 @@
       "youtubeChannelHandle": "@thepointechurch4274",
       "pushpayUrl": "https://pushpay.com/g/thepointechurchcb",
       "proxyUrl": "https://pointe-pco-proxy.thepointechurch.workers.dev",
-      "youversionUrl": "https://www.bible.com/events/49603283"
+      "youversionUrl": "https://www.bible.com/events/49603283",
+      "eas": {
+        "projectId": "56b1d30a-9971-4443-9f2d-94668ed3767d"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/56b1d30a-9971-4443-9f2d-94668ed3767d"
     }
   }
 }

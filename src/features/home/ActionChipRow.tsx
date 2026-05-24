@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { colors, radius, spacing, typography } from '../theme';
+import { Palette, radius, spacing, Typography, useColors, useTypography } from '../../theme';
 
 export type Chip = {
   key: string;
@@ -11,6 +11,9 @@ export type Chip = {
 };
 
 export function ActionChipRow({ chips }: { chips: Chip[] }) {
+  const colors = useColors();
+  const typography = useTypography();
+  const styles = useMemo(() => makeStyles(colors, typography), [colors, typography]);
   return (
     <ScrollView
       horizontal
@@ -25,6 +28,9 @@ export function ActionChipRow({ chips }: { chips: Chip[] }) {
 }
 
 function ActionChip({ chip }: { chip: Chip }) {
+  const colors = useColors();
+  const typography = useTypography();
+  const styles = useMemo(() => makeStyles(colors, typography), [colors, typography]);
   const tones = {
     sky: { bg: colors.skyBg, fg: colors.skyDeep, border: colors.skySoft },
     peach: { bg: colors.peachSoft, fg: colors.peachInk, border: colors.peach },
@@ -45,21 +51,23 @@ function ActionChip({ chip }: { chip: Chip }) {
   );
 }
 
-const styles = StyleSheet.create({
-  row: {
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
-    gap: spacing.sm + 2,
-  },
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 2,
-    borderRadius: radius.pill,
-    borderWidth: 1,
-    gap: 8,
-  },
-  glyph: { fontSize: 16 },
-  label: { ...typography.h3, fontSize: 14 },
-});
+function makeStyles(_colors: Palette, typography: Typography) {
+  return StyleSheet.create({
+    row: {
+      paddingHorizontal: spacing.lg,
+      paddingVertical: spacing.md,
+      gap: spacing.sm + 2,
+    },
+    chip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm + 2,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      gap: 8,
+    },
+    glyph: { fontSize: 16 },
+    label: { ...typography.h3, fontSize: 14 },
+  });
+}

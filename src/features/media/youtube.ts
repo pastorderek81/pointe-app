@@ -8,7 +8,7 @@
 //
 // Setup: https://console.cloud.google.com/apis/credentials → create API key,
 // restrict to YouTube Data API v3, drop into app.json `extra.youtubeApiKey`.
-import { config, isPlaceholder } from './config';
+import { config, isPlaceholder } from '../../config';
 
 export type YouTubeVideo = {
   id: string;
@@ -113,6 +113,45 @@ export async function fetchPlaylistVideos(playlistId: string, max = 5): Promise<
 
 export function youtubeWatchUrl(videoId: string) {
   return `https://www.youtube.com/watch?v=${videoId}`;
+}
+
+export function youtubePlaylistUrl(playlistId: string) {
+  return `https://www.youtube.com/playlist?list=${playlistId}`;
+}
+
+export function youtubeLiveUrl() {
+  const handle = config.youtubeChannelHandle.replace(/^@/, '');
+  return `https://www.youtube.com/@${handle}/live`;
+}
+
+// ---- All series (every playlist on the channel) ----
+export async function fetchAllSeries(max = 25): Promise<YouTubeSeries[]> {
+  if (isPlaceholder(config.youtubeApiKey)) throw new Error('YouTube API key not configured');
+  const channelId = await resolveChannelId();
+  const url = `https://www.googleapis.com/youtube/v3/playlists?part=snippet&channelId=${channelId}&maxResults=${max}&key=${config.youtubeApiKey}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`YouTube playlists failed: ${res.status}`);
+  const json = await res.json();
+  const playlists = (json.items ?? []) as any[];
+  return playlists
+    .slice()
+    .sort(
+      (a, b) =>
+        new Date(b.snippet?.publishedAt ?? 0).getTime() -
+        new Date(a.snippet?.publishedAt ?? 0).getTime(),
+    )
+    .map((p: any): YouTubeSeries => {
+      const rawTitle = p.snippet?.title ?? '';
+      const [titlePart, ...subParts] = rawTitle.split(/\s*[—–-]\s*/);
+      const subtitleFromTitle = subParts.join(' — ').trim();
+      const description = (p.snippet?.description ?? '').trim();
+      return {
+        id: p.id,
+        title: titlePart.trim() || rawTitle,
+        subtitle: subtitleFromTitle || description || '',
+        imageUrl: pickBestThumbnail(p.snippet?.thumbnails),
+      };
+    });
 }
 
 // ---- Current series (most recent playlist) ----

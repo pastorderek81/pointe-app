@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
-import { colors, radius, spacing } from '../theme';
+import { Palette, radius, spacing, useColors } from '../theme';
 
 export function Card({
   children,
@@ -11,6 +11,8 @@ export function Card({
   onPress?: () => void;
   style?: ViewStyle;
 }) {
+  const colors = useColors();
+  const styles = useMemo(() => makeStyles(colors), [colors]);
   const Wrapper: any = onPress ? Pressable : View;
   return (
     <Wrapper
@@ -26,13 +28,15 @@ export function Card({
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.line,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-  },
-});
+function makeStyles(colors: Palette) {
+  return StyleSheet.create({
+    card: {
+      backgroundColor: colors.white,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.line,
+      padding: spacing.md,
+      marginBottom: spacing.md,
+    },
+  });
+}

@@ -92,17 +92,29 @@ Open the new "Pointe Church (dev)" app on your phone — same QR-scan flow as Ex
 
 EAS auto-provisions APNs (iOS push) and FCM (Android push) credentials on first build.
 
-## Sending push notifications
+## Admin web UI
 
-Once you have a real device with the app installed, you'll get an Expo push token. To broadcast:
+<https://pointe-pco-proxy.thepointechurch.workers.dev/admin>
+
+The single place to do two recurring tasks:
+
+- **Send a push notification** to every device with the app installed and notifications enabled
+- **Edit the home screen** content — hero image, sermon notes URL, featured cards (add / remove / reorder / edit). Saves commit to the [pointe-content](https://github.com/pastorderek81/pointe-content) GitHub repo automatically. App picks up changes within ~60 seconds.
+
+HTTP Basic Auth. Username can be anything; password is whatever you set as `ADMIN_PASSWORD` in the Worker. Share that password with staff who should have admin access; rotate it whenever the team changes (`npx wrangler secret put ADMIN_PASSWORD` in `proxy/`).
+
+**For curl-based broadcasts (advanced / scripts):**
 
 ```bash
-curl -X POST https://exp.host/--/api/v2/push/send \
+curl -X POST https://pointe-pco-proxy.thepointechurch.workers.dev/push/broadcast \
   -H "Content-Type: application/json" \
-  -d '{"to": "ExponentPushToken[xxx]", "title": "This Sunday", "body": "9:30 + 11 AM. See you there."}'
+  -H "Authorization: Bearer $PUSH_BROADCAST_SECRET" \
+  -d '{"title": "This Sunday", "body": "9:30 + 11 AM. See you there."}'
 ```
 
-Phase 2 should add a tiny admin tool that stores tokens server-side so you can broadcast to everyone at once.
+Returns `{ total, sent, removed, failed }`. `removed` = uninstalled devices auto-pruned from the registry.
+
+**Defaults to off:** users have to opt in via the home screen "Heads-up before Sunday?" prompt or the Settings toggle. Tokens auto-sync on every app launch after that.
 
 ## Updating the current sermon series
 
@@ -130,7 +142,7 @@ The hardcoded HTML in the website pages stays as a fallback — it's what shows 
 - Kids check-in (PCO Check-Ins API)
 - Member directory
 - Sermon notes / archive search
-- A small admin tool to broadcast push notifications
+- Per-staff admin logins (currently shared password — upgrade to Cloudflare Access when needed)
 
 ## File map
 
