@@ -2,8 +2,8 @@
 // stay visually in sync. Light + dark palettes share the same key shape so
 // every component can read colors via `useColors()` without caring which
 // scheme is active.
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import { Platform } from 'react-native';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { Appearance, Platform } from 'react-native';
 
 // ---------- Palette ----------
 
@@ -208,46 +208,75 @@ export function makeTypography(colors: Palette) {
 }
 
 // ---------- Theme context + hooks ----------
+//
+// Two related concepts:
+//   - "preference" is what the user picked in Settings: 'auto' | 'light' | 'dark'.
+//     This is what we persist to SecureStore.
+//   - "scheme" is the effective theme currently rendering: 'light' | 'dark'.
+//     When preference is 'auto', this follows the OS setting and updates
+//     live when the user toggles their phone between light and dark.
+//
+// Most components only care about the effective scheme — they call
+// useColors() / useTypography() / useScheme(). The Settings screen is the
+// one place that cares about the preference, and uses useThemePreference().
 
-export type ColorScheme = 'light' | 'dark';
+export type ColorScheme = 'light' | 'dark'; // effective
+export type ColorPreference = 'auto' | 'light' | 'dark'; // user choice
 
 type ThemeContextValue = {
   colors: Palette;
   typography: Typography;
   scheme: ColorScheme;
-  setScheme: (s: ColorScheme) => void;
+  preference: ColorPreference;
+  setPreference: (p: ColorPreference) => void;
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
+function resolveSystemScheme(): ColorScheme {
+  return Appearance.getColorScheme() === 'dark' ? 'dark' : 'light';
+}
+
 export function ThemeProvider({
   children,
-  initialScheme = 'light',
-  onSchemeChange,
+  initialPreference = 'auto',
+  onPreferenceChange,
 }: {
   children: React.ReactNode;
-  initialScheme?: ColorScheme;
-  onSchemeChange?: (s: ColorScheme) => void;
+  initialPreference?: ColorPreference;
+  onPreferenceChange?: (p: ColorPreference) => void;
 }) {
-  const [scheme, setSchemeState] = useState<ColorScheme>(initialScheme);
+  const [preference, setPreferenceState] = useState<ColorPreference>(initialPreference);
+  const [systemScheme, setSystemScheme] = useState<ColorScheme>(resolveSystemScheme);
 
-  const setScheme = useCallback(
-    (s: ColorScheme) => {
-      setSchemeState(s);
-      onSchemeChange?.(s);
+  // Track OS theme changes so 'auto' mode flips live when the user toggles
+  // their device between light and dark (e.g., scheduled dark mode at sunset).
+  useEffect(() => {
+    const sub = Appearance.addChangeListener(({ colorScheme }) => {
+      setSystemScheme(colorScheme === 'dark' ? 'dark' : 'light');
+    });
+    return () => sub.remove();
+  }, []);
+
+  const setPreference = useCallback(
+    (p: ColorPreference) => {
+      setPreferenceState(p);
+      onPreferenceChange?.(p);
     },
-    [onSchemeChange],
+    [onPreferenceChange],
   );
 
   const value = useMemo<ThemeContextValue>(() => {
+    const scheme: ColorScheme = preference === 'auto' ? systemScheme : preference;
     const palette = scheme === 'dark' ? darkPalette : lightPalette;
     return {
       colors: palette,
       typography: makeTypography(palette),
       scheme,
-      setScheme,
+      preference,
+      setPreference,
     };
-  }, [scheme, setScheme]);
+  }, [preference, systemScheme, setPreference]);
 
   return React.createElement(ThemeContext.Provider, { value }, children);
 }
@@ -261,7 +290,8 @@ function useThemeContext(): ThemeContextValue {
       colors: lightPalette,
       typography: makeTypography(lightPalette),
       scheme: 'light',
-      setScheme: () => {},
+      preference: 'light',
+      setPreference: () => {},
     };
   }
   return ctx;
@@ -275,9 +305,18 @@ export function useTypography(): Typography {
   return useThemeContext().typography;
 }
 
-export function useScheme(): readonly [ColorScheme, (s: ColorScheme) => void] {
+// Effective scheme. Components reading the rendered theme use this — it's
+// always 'light' or 'dark', never 'auto'.
+export function useScheme(): readonly [ColorScheme, (p: ColorPreference) => void] {
   const ctx = useThemeContext();
-  return [ctx.scheme, ctx.setScheme] as const;
+  return [ctx.scheme, ctx.setPreference] as const;
+}
+
+// User's stored preference (may be 'auto'). The Settings UI uses this to
+// highlight the active pill.
+export function useThemePreference(): readonly [ColorPreference, (p: ColorPreference) => void] {
+  const ctx = useThemeContext();
+  return [ctx.preference, ctx.setPreference] as const;
 }
 
 // ---------- Backwards-compat static exports ----------

@@ -182,13 +182,22 @@ export function HomeScreen({ navigation }: any) {
         subtitle={heroSubtitle}
         isLive={live}
         rightSlot={
-          <Pressable
-            onPress={() => navigation.navigate('Settings')}
-            hitSlop={12}
-            style={({ pressed }) => [styles.gearBtn, pressed && { opacity: 0.7 }]}
-          >
-            <Text style={styles.gearGlyph}>⚙</Text>
-          </Pressable>
+          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+            <Pressable
+              onPress={() => navigation.navigate('Notifications')}
+              hitSlop={12}
+              style={({ pressed }) => [styles.gearBtn, pressed && { opacity: 0.7 }]}
+            >
+              <Text style={styles.gearGlyph}>🔔</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => navigation.navigate('Settings')}
+              hitSlop={12}
+              style={({ pressed }) => [styles.gearBtn, pressed && { opacity: 0.7 }]}
+            >
+              <Text style={styles.gearGlyph}>⚙</Text>
+            </Pressable>
+          </View>
         }
       />
 

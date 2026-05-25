@@ -4,6 +4,7 @@ import { RootTabs } from './RootTabs';
 import { SettingsScreen } from '../features/settings/SettingsScreen';
 import { SeriesDetailScreen } from '../features/media/SeriesDetailScreen';
 import { WelcomeScreen } from '../features/welcome/WelcomeScreen';
+import { NotificationsScreen } from '../features/notifications/NotificationsScreen';
 import { useAuth } from '../core/AuthContext';
 
 const Stack = createNativeStackNavigator();
@@ -25,6 +26,7 @@ export function RootStack() {
             options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
           />
           <Stack.Screen name="SeriesDetail" component={SeriesDetailScreen} />
+          <Stack.Screen name="Notifications" component={NotificationsScreen} />
         </>
       ) : (
         <Stack.Screen name="Welcome" component={WelcomeScreen} />

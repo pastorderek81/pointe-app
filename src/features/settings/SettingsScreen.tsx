@@ -6,14 +6,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card } from '../../components/Card';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { useAuth } from '../../core/AuthContext';
-import { Palette, radius, shadow, spacing, Typography, useColors, useScheme, useTypography } from '../../theme';
+import { Palette, radius, shadow, spacing, Typography, useColors, useThemePreference, useTypography } from '../../theme';
 import { getPushPermissionStatus, requestAndRegisterPush } from '../../core/push';
 
 export function SettingsScreen({ navigation }: any) {
   const colors = useColors();
   const typography = useTypography();
   const styles = useMemo(() => makeStyles(colors, typography), [colors, typography]);
-  const [scheme, setScheme] = useScheme();
+  const [preference, setPreference] = useThemePreference();
   const { signedIn, signIn, signOut, configured } = useAuth();
   const [pushEnabled, setPushEnabled] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -92,15 +92,16 @@ export function SettingsScreen({ navigation }: any) {
             <Text style={typography.label}>APPEARANCE</Text>
             <Text style={[typography.h2, { marginTop: spacing.xs }]}>Theme</Text>
             <Text style={[typography.small, { marginTop: spacing.xs }]}>
-              Pick light or dark. Switches instantly.
+              Auto follows your phone's system setting. Light or Dark stays fixed.
             </Text>
             <View style={styles.themeRow}>
-              {(['light', 'dark'] as const).map((s) => {
-                const active = scheme === s;
+              {(['auto', 'light', 'dark'] as const).map((p) => {
+                const active = preference === p;
+                const label = p === 'auto' ? 'Auto' : p === 'light' ? 'Light' : 'Dark';
                 return (
                   <Pressable
-                    key={s}
-                    onPress={() => setScheme(s)}
+                    key={p}
+                    onPress={() => setPreference(p)}
                     style={({ pressed }) => [
                       styles.themePill,
                       active && styles.themePillActive,
@@ -108,7 +109,7 @@ export function SettingsScreen({ navigation }: any) {
                     ]}
                   >
                     <Text style={[styles.themePillLabel, active && styles.themePillLabelActive]}>
-                      {s === 'light' ? 'Light' : 'Dark'}
+                      {label}
                     </Text>
                   </Pressable>
                 );

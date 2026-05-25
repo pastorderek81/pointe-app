@@ -60,6 +60,13 @@ const IMAGE_MIME_TO_EXT: Record<string, string> = {
 const EXPO_PUSH_API = 'https://exp.host/--/api/v2/push/send';
 const PUSH_BATCH_SIZE = 100;
 
+// Push broadcast history lives in the same KV as tokens to avoid an extra
+// namespace binding. Discriminator: keys with this prefix are history
+// records (JSON-encoded), all other keys are Expo push tokens.
+const HISTORY_PREFIX = 'hist:';
+const HISTORY_MAX_DEFAULT = 50;
+const HISTORY_MAX_LIMIT = 100;
+
 // /series.json — current sermon series, merged from YouTube + YouVersion.
 // The latest YouTube playlist provides the playlist URL + thumbnail; the
 // latest video's description should contain `Sermon Notes:
@@ -95,6 +102,9 @@ export default {
     }
     if (url.pathname === '/push/broadcast' && request.method === 'POST') {
       return handlePushBroadcast(request, env);
+    }
+    if (url.pathname === '/push/history' && request.method === 'GET') {
+      return handlePushHistory(url, env);
     }
 
     // Admin web UI + API (HTTP Basic Auth)
@@ -479,7 +489,12 @@ async function performBroadcast(env: Env, body: { title?: unknown; body?: unknow
   let cursor: string | undefined;
   do {
     const result: KVNamespaceListResult<unknown, string> = await env.PUSH_TOKENS.list({ cursor });
-    for (const k of result.keys) tokens.push(k.name);
+    for (const k of result.keys) {
+      // History records live in the same KV — skip them so we don't try to
+      // send a push notification to a JSON-encoded history entry.
+      if (k.name.startsWith(HISTORY_PREFIX)) continue;
+      tokens.push(k.name);
+    }
     cursor = result.list_complete ? undefined : result.cursor;
   } while (cursor);
 
@@ -513,7 +528,66 @@ async function performBroadcast(env: Env, body: { title?: unknown; body?: unknow
     }
   }
 
+  // Log this broadcast to history so users can see what they've missed in
+  // the in-app Notifications screen. Key format: `hist:<reverse-ts>-<rand>`
+  // — reverse timestamp so list() returns newest first naturally.
+  // Records auto-expire after 90 days to keep KV usage bounded.
+  const sentAt = Date.now();
+  const id = `${(2_000_000_000_000 - sentAt).toString().padStart(13, '0')}-${cryptoRandomHex(6)}`;
+  const historyRecord = {
+    id,
+    title,
+    body: messageBody,
+    data,
+    sentAt,
+    sentCount: sent,
+  };
+  try {
+    await env.PUSH_TOKENS.put(
+      `${HISTORY_PREFIX}${id}`,
+      JSON.stringify(historyRecord),
+      { expirationTtl: 60 * 60 * 24 * 90 }, // 90 days
+    );
+  } catch {
+    // History write failure is non-fatal — the push already shipped.
+  }
+
   return jsonResponse(200, { total: tokens.length, sent, removed, failed });
+}
+
+function cryptoRandomHex(bytes: number): string {
+  const buf = new Uint8Array(bytes);
+  crypto.getRandomValues(buf);
+  return Array.from(buf).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function handlePushHistory(url: URL, env: Env): Promise<Response> {
+  if (!env.PUSH_TOKENS) return jsonError(503, 'push_kv_not_configured');
+
+  const limitParam = parseInt(url.searchParams.get('limit') || '', 10);
+  const limit = Math.min(
+    HISTORY_MAX_LIMIT,
+    Math.max(1, Number.isFinite(limitParam) ? limitParam : HISTORY_MAX_DEFAULT),
+  );
+
+  // KV list() returns keys in lexicographic order. Our reverse-timestamp
+  // key format means lexicographic order == newest first.
+  const listed = await env.PUSH_TOKENS.list({ prefix: HISTORY_PREFIX, limit });
+  const records = await Promise.all(
+    listed.keys.map(async (k) => {
+      const raw = await env.PUSH_TOKENS!.get(k.name);
+      if (!raw) return null;
+      try {
+        return JSON.parse(raw);
+      } catch {
+        return null;
+      }
+    }),
+  );
+
+  return jsonResponse(200, {
+    notifications: records.filter((r) => r !== null),
+  });
 }
 
 // ============================================================

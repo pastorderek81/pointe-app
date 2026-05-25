@@ -18,7 +18,7 @@ import {
 import { AuthProvider } from './src/core/AuthContext';
 import { RootStack } from './src/navigation/RootStack';
 import { syncPushRegistration } from './src/core/push';
-import { ColorScheme, ThemeProvider, useColors, useScheme } from './src/theme';
+import { ColorPreference, ThemeProvider, useColors, useScheme } from './src/theme';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -34,25 +34,28 @@ export default function App() {
   });
 
   // Load the user's saved theme preference before first render so we don't
-  // briefly flash the wrong scheme. Default to light.
-  const [initialScheme, setInitialScheme] = useState<ColorScheme | null>(null);
+  // briefly flash the wrong scheme. Default to 'auto' (follow system) for
+  // new installs — feels native and matches what most modern apps do.
+  const [initialPreference, setInitialPreference] = useState<ColorPreference | null>(null);
   useEffect(() => {
     let cancelled = false;
     // On older iOS in some keychain states, SecureStore can hang without
     // resolving or rejecting. Don't let that pin the splash screen forever.
     const timeout = setTimeout(() => {
-      if (!cancelled) setInitialScheme('light');
+      if (!cancelled) setInitialPreference('auto');
     }, 1500);
     SecureStore.getItemAsync(THEME_PREFERENCE_KEY)
       .then((v) => {
         if (cancelled) return;
         clearTimeout(timeout);
-        setInitialScheme(v === 'dark' || v === 'light' ? v : 'light');
+        const valid: ColorPreference =
+          v === 'dark' || v === 'light' || v === 'auto' ? v : 'auto';
+        setInitialPreference(valid);
       })
       .catch(() => {
         if (cancelled) return;
         clearTimeout(timeout);
-        setInitialScheme('light');
+        setInitialPreference('auto');
       });
     return () => {
       cancelled = true;
@@ -61,8 +64,8 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (fontsLoaded && initialScheme) SplashScreen.hideAsync().catch(() => {});
-  }, [fontsLoaded, initialScheme]);
+    if (fontsLoaded && initialPreference) SplashScreen.hideAsync().catch(() => {});
+  }, [fontsLoaded, initialPreference]);
 
   // Re-sync the push token on every launch (handles token rotation, new
   // installs after restoring from backup, etc). No-op if the user hasn't
@@ -71,16 +74,16 @@ export default function App() {
     syncPushRegistration();
   }, []);
 
-  if (!fontsLoaded || !initialScheme) return null;
+  if (!fontsLoaded || !initialPreference) return null;
 
   return (
     <SafeAreaProvider>
       <ThemeProvider
-        initialScheme={initialScheme}
-        onSchemeChange={(s) => {
+        initialPreference={initialPreference}
+        onPreferenceChange={(p) => {
           // Best-effort persist; failure is non-fatal — user's preference
           // just won't survive a restart.
-          SecureStore.setItemAsync(THEME_PREFERENCE_KEY, s).catch(() => {});
+          SecureStore.setItemAsync(THEME_PREFERENCE_KEY, p).catch(() => {});
         }}
       >
         <ThemedShell />
