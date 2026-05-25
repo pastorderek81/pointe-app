@@ -73,14 +73,25 @@ export function HomeScreen({ navigation }: any) {
       .catch(() => {});
   }, [series.id]);
 
+  // Single source of truth for the Sermon Notes link. Admin page wins, then
+  // YouTube-derived Bible.com link from the latest message, then app config
+  // as last resort. Empty strings are treated as "not set."
+  const sermonNotesUrl =
+    (content.sermonNotesUrl && content.sermonNotesUrl.trim()) ||
+    (latest?.bibleUrl && latest.bibleUrl.trim()) ||
+    config.youversionUrl ||
+    null;
+
   const chips: Chip[] = [
-    {
-      key: 'sermon-notes',
-      label: 'Sermon Notes',
-      glyph: '✎',
-      tone: 'sky',
-      onPress: () => Linking.openURL(content.sermonNotesUrl),
-    },
+    ...(sermonNotesUrl
+      ? [{
+          key: 'sermon-notes',
+          label: 'Sermon Notes',
+          glyph: '✎',
+          tone: 'sky' as const,
+          onPress: () => Linking.openURL(sermonNotesUrl),
+        }]
+      : []),
     {
       key: 'connect',
       label: 'Connect',
@@ -230,23 +241,19 @@ export function HomeScreen({ navigation }: any) {
               : undefined
           }
         />
-        {(() => {
-          const notesUrl = latest?.bibleUrl ?? config.youversionUrl;
-          if (!notesUrl) return null;
-          return (
-            <Pressable
-              onPress={() => Linking.openURL(notesUrl)}
-              style={({ pressed }) => [styles.notesBtn, pressed && { opacity: 0.85 }]}
-            >
-              <Text style={styles.notesGlyph}>✜</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.notesTitle}>Sermon Notes</Text>
-                <Text style={styles.notesSub}>Open in YouVersion Bible app</Text>
-              </View>
-              <Text style={styles.notesChev}>›</Text>
-            </Pressable>
-          );
-        })()}
+        {sermonNotesUrl ? (
+          <Pressable
+            onPress={() => Linking.openURL(sermonNotesUrl)}
+            style={({ pressed }) => [styles.notesBtn, pressed && { opacity: 0.85 }]}
+          >
+            <Text style={styles.notesGlyph}>✜</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.notesTitle}>Sermon Notes</Text>
+              <Text style={styles.notesSub}>Open in YouVersion Bible app</Text>
+            </View>
+            <Text style={styles.notesChev}>›</Text>
+          </Pressable>
+        ) : null}
       </View>
 
       {!signedIn && (
