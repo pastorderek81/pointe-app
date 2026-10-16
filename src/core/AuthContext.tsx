@@ -1,7 +1,9 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { Linking } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { clearTokens, exchangeCode, loadTokens, useAuthRequest } from './pco/auth';
 import { config, isPlaceholder } from '../config';
+import { SignInSheet } from './SignInSheet';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -29,6 +31,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [guestSession, setGuestSession] = useState(false);
   const [loading, setLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
+  // "Sign in" opens a chooser sheet (sign in / set a password / new here)
+  // instead of jumping straight to Planning Center's password-only login.
+  const [sheetVisible, setSheetVisible] = useState(false);
+  const [sheetTrouble, setSheetTrouble] = useState(false);
+  const [sheetSession, setSheetSession] = useState(0);
   const [request, response, promptAsync] = useAuthRequest();
 
   useEffect(() => {
@@ -62,6 +69,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  const showTrouble = useCallback(() => {
+    setSheetTrouble(true);
+    setSheetSession((n) => n + 1);
+    setSheetVisible(true);
+  }, []);
+
   useEffect(() => {
     if (!response) return;
     if (response.type === 'success' && request?.codeVerifier) {
@@ -73,21 +86,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const msg = e?.message ?? String(e);
           setAuthError(`Token exchange failed: ${msg}`);
           console.warn('PCO exchange failed', e);
+          showTrouble();
         });
     } else if (response.type === 'error') {
       setAuthError(`OAuth error: ${response.error?.message ?? response.params?.error_description ?? 'unknown'}`);
-    } else if (response.type === 'dismiss') {
-      setAuthError('Sign-in cancelled or redirect did not reach app');
+      showTrouble();
+    } else if (response.type === 'dismiss' || response.type === 'cancel') {
+      // Usually means they hit the password screen and couldn't get past it.
+      showTrouble();
     }
-  }, [response, request?.codeVerifier]);
+  }, [response, request?.codeVerifier, showTrouble]);
 
-  const signIn = useCallback(async () => {
+  const startOAuth = useCallback(async () => {
     if (isPlaceholder(config.pcoClientId)) {
       console.warn('PCO client ID not configured — see app.json extra.pcoClientId');
       return;
     }
+    setSheetVisible(false);
+    setAuthError(null);
+    // Let the sheet finish sliding away — iOS won't present the auth
+    // browser while a Modal is still on screen.
+    await wait(350);
     await promptAsync();
   }, [promptAsync]);
+
+  const signIn = useCallback(async () => {
+    setSheetTrouble(false);
+    setSheetSession((n) => n + 1);
+    setSheetVisible(true);
+  }, []);
+
+  const openHelpLink = useCallback(async (url: string) => {
+    setSheetVisible(false);
+    await wait(350);
+    try {
+      await WebBrowser.openBrowserAsync(url, {
+        dismissButtonStyle: 'close',
+        presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
+      });
+    } catch {
+      await Linking.openURL(url);
+    }
+    // Back from setting a password / filling the form — Sign in is right there.
+    setSheetVisible(true);
+  }, []);
 
   const signOut = useCallback(async () => {
     await clearTokens();
@@ -117,7 +159,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [signedIn, guestSession, loading, authError, signIn, signOut, continueAsGuest, clearAuthError]
   );
 
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+  return (
+    <Ctx.Provider value={value}>
+      {children}
+      <SignInSheet
+        visible={sheetVisible}
+        trouble={sheetTrouble}
+        session={sheetSession}
+        onSignIn={startOAuth}
+        onOpenLink={openHelpLink}
+        onClose={() => setSheetVisible(false)}
+      />
+    </Ctx.Provider>
+  );
+}
+
+function wait(ms: number) {
+  return new Promise((r) => setTimeout(r, ms));
 }
 
 export function useAuth() {
