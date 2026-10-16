@@ -14,19 +14,24 @@ const CONNECT_FORM_URL = 'https://mypointe.churchcenter.com/people/forms/964973'
 const HELP_EMAIL =
   'mailto:info@thepointe.online?subject=App%20sign-in%20help&body=I%20can%E2%80%99t%20sign%20in%20to%20The%20Pointe%20app.%20The%20email%20or%20phone%20I%20use%20with%20the%20church%20is%3A%20';
 
-type Mode = 'choose' | 'signup' | 'trouble';
+// choose  — "I have an account" / "I don't have an account"
+// signin  — explains Planning Center, then hands off to its login page
+// signup  — guided steps to create a profile and set a password
+// trouble — shown after a failed or cancelled sign-in
+export type SignInSheetMode = 'choose' | 'signin' | 'signup' | 'trouble';
 
 export function SignInSheet({
   visible,
-  trouble,
+  initialMode,
   session,
   onSignIn,
   onOpenLink,
   onClose,
 }: {
   visible: boolean;
-  // True after a sign-in attempt failed or was cancelled — leads with help.
-  trouble: boolean;
+  // Where the sheet opens: the chooser, straight into one path (Welcome's
+  // buttons), or help after a sign-in attempt failed or was cancelled.
+  initialMode: SignInSheetMode;
   // Bumped each time the sheet is freshly opened, so it starts over at the
   // top. (It is NOT bumped when we return from a help page mid-sign-up.)
   session: number;
@@ -39,14 +44,19 @@ export function SignInSheet({
   const typography = useTypography();
   const styles = useMemo(() => makeStyles(colors, typography), [colors, typography]);
 
-  const [mode, setMode] = useState<Mode>(trouble ? 'trouble' : 'choose');
+  const [mode, setMode] = useState<SignInSheetMode>(initialMode);
+  const trouble = initialMode === 'trouble';
   // Sign-up steps they've opened, so we can check them off and point at the next one.
   const [profileDone, setProfileDone] = useState(false);
   const [passwordDone, setPasswordDone] = useState(false);
 
   useEffect(() => {
-    setMode(trouble ? 'trouble' : 'choose');
-  }, [session, trouble]);
+    setMode(initialMode);
+  }, [session, initialMode]);
+
+  // Back returns to where the sheet opened, so it only shows once they've moved on.
+  const back =
+    mode !== initialMode ? <BackLink styles={styles} onPress={() => setMode(initialMode)} /> : null;
 
   useEffect(() => {
     setProfileDone(false);
@@ -74,7 +84,7 @@ export function SignInSheet({
                   body="I’ve used Church Center or given, registered, or joined a group online."
                   cta="Sign in"
                   primary
-                  onPress={onSignIn}
+                  onPress={() => setMode('signin')}
                 />
                 <ChoiceCard
                   styles={styles}
@@ -90,12 +100,44 @@ export function SignInSheet({
               </>
             )}
 
+            {mode === 'signin' && (
+              <>
+                {back}
+                <Text style={styles.title}>Sign in</Text>
+                <Text style={styles.body}>
+                  The Pointe uses Planning Center, the same secure system behind Church Center, for
+                  your profile, groups, and events. Next you’ll see Planning Center’s sign-in page:
+                  enter the email you use with the church and your password.
+                </Text>
+
+                <PrimaryButton label="Continue to sign in" variant="peach" onPress={onSignIn} />
+
+                <Text style={styles.section}>BEFORE YOU GO</Text>
+
+                <HelpRow
+                  styles={styles}
+                  title="Never set a password?"
+                  body="If you’ve only signed in to Church Center with a text code, you don’t have one yet. Set it up first, then come back and sign in."
+                  cta="Set up my password"
+                  onPress={() => onOpenLink(PASSWORD_SETUP_URL)}
+                />
+                <HelpRow
+                  styles={styles}
+                  title="Don’t have an account?"
+                  body="We’ll walk you through creating one. It takes about two minutes."
+                  cta="Set up an account"
+                  onPress={() => setMode('signup')}
+                />
+              </>
+            )}
+
             {mode === 'signup' && (
               <>
-                <BackLink styles={styles} onPress={() => setMode('choose')} />
-                <Text style={styles.title}>Create your account</Text>
+                {back}
+                <Text style={styles.title}>Set up your account</Text>
                 <Text style={styles.body}>
-                  Takes about two minutes. Use the same email for both steps.
+                  The Pointe uses Planning Center, the same system behind Church Center. Setup takes
+                  about two minutes. Use the same email for both steps.
                 </Text>
 
                 <Step
@@ -147,7 +189,7 @@ export function SignInSheet({
 
             {mode === 'trouble' && (
               <>
-                {!trouble && <BackLink styles={styles} onPress={() => setMode('choose')} />}
+                {back}
                 <Text style={styles.title}>Having trouble signing in?</Text>
                 <Text style={styles.body}>
                   The app uses your Planning Center account, the same one behind Church Center.

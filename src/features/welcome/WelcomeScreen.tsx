@@ -4,14 +4,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PrimaryButton } from '../../components/PrimaryButton';
 import { useAuth } from '../../core/AuthContext';
-import { colors, spacing, typography } from '../../theme';
+import { colors, radius, spacing, typography } from '../../theme';
 
 const HERO = require('../../../assets/photo-worship.jpg');
 
 // First-launch gate. Shown until the user either signs in or chooses to
 // continue as a guest. Choice is persisted so they don't see this every time.
 export function WelcomeScreen() {
-  const { signIn, continueAsGuest, configured, authError } = useAuth();
+  const { startSignIn, startSignUp, continueAsGuest, configured, authError } = useAuth();
 
   return (
     <View style={styles.root}>
@@ -32,8 +32,7 @@ export function WelcomeScreen() {
             <Text style={styles.eyebrow}>WELCOME HOME</Text>
             <Text style={styles.title}>You belong here.</Text>
             <Text style={styles.body}>
-              Sign in with your Planning Center account for groups, events, and your
-              account — or browse as a guest.
+              Sign in for your groups, events, and more — or look around as a guest.
             </Text>
 
             {authError ? (
@@ -43,12 +42,22 @@ export function WelcomeScreen() {
               </View>
             ) : null}
 
+            {/* Planning Center is explained on the next sheet, after they've
+                chosen — naming it up front scared people off signing in. */}
             <PrimaryButton
-              label={configured ? 'Sign in with Planning Center' : 'Sign-in not yet configured'}
+              label={configured ? 'Sign in' : 'Sign-in not yet configured'}
               variant="peach"
-              onPress={signIn}
+              onPress={startSignIn}
               style={{ marginTop: spacing.lg }}
             />
+
+            <Pressable
+              onPress={startSignUp}
+              style={({ pressed }) => [styles.outlineBtn, pressed && { opacity: 0.7 }]}
+              accessibilityRole="button"
+            >
+              <Text style={styles.outlineLabel}>Set up an account</Text>
+            </Pressable>
 
             <Pressable
               onPress={continueAsGuest}
@@ -103,6 +112,21 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     fontSize: 16,
     lineHeight: 24,
+  },
+  outlineBtn: {
+    paddingVertical: spacing.md - 2,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.pill,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.6)',
+    alignItems: 'center',
+    marginTop: spacing.sm,
+  },
+  outlineLabel: {
+    fontFamily: 'Inter_700Bold',
+    fontSize: 15,
+    letterSpacing: 0.2,
+    color: colors.white,
   },
   guestBtn: {
     paddingVertical: spacing.md,

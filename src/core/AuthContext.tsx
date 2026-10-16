@@ -3,7 +3,7 @@ import { Linking } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { clearTokens, exchangeCode, loadTokens, useAuthRequest } from './pco/auth';
 import { config, isPlaceholder } from '../config';
-import { SignInSheet } from './SignInSheet';
+import { SignInSheet, SignInSheetMode } from './SignInSheet';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -18,7 +18,11 @@ type AuthState = {
   loading: boolean;
   configured: boolean;
   authError: string | null;
+  // Opens the sign-in sheet at "have an account or new here?".
   signIn: () => Promise<void>;
+  // Welcome screen shortcuts: skip the chooser and go straight to that path.
+  startSignIn: () => void;
+  startSignUp: () => void;
   signOut: () => Promise<void>;
   continueAsGuest: () => void;
   clearAuthError: () => void;
@@ -34,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // "Sign in" opens a chooser sheet (sign in / set a password / new here)
   // instead of jumping straight to Planning Center's password-only login.
   const [sheetVisible, setSheetVisible] = useState(false);
-  const [sheetTrouble, setSheetTrouble] = useState(false);
+  const [sheetMode, setSheetMode] = useState<SignInSheetMode>('choose');
   const [sheetSession, setSheetSession] = useState(0);
   const [request, response, promptAsync] = useAuthRequest();
 
@@ -69,11 +73,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const showTrouble = useCallback(() => {
-    setSheetTrouble(true);
+  const openSheet = useCallback((mode: SignInSheetMode) => {
+    setSheetMode(mode);
     setSheetSession((n) => n + 1);
     setSheetVisible(true);
   }, []);
+
+  const showTrouble = useCallback(() => openSheet('trouble'), [openSheet]);
 
   useEffect(() => {
     if (!response) return;
@@ -110,11 +116,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await promptAsync();
   }, [promptAsync]);
 
-  const signIn = useCallback(async () => {
-    setSheetTrouble(false);
-    setSheetSession((n) => n + 1);
-    setSheetVisible(true);
-  }, []);
+  const signIn = useCallback(async () => openSheet('choose'), [openSheet]);
+  const startSignIn = useCallback(() => openSheet('signin'), [openSheet]);
+  const startSignUp = useCallback(() => openSheet('signup'), [openSheet]);
 
   // Help pages open in Safari / the system browser while the sheet stays put.
   // (Hiding the sheet to show the in-app browser raced the Modal's dismiss
@@ -150,11 +154,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       configured: !isPlaceholder(config.pcoClientId),
       authError,
       signIn,
+      startSignIn,
+      startSignUp,
       signOut,
       continueAsGuest,
       clearAuthError,
     }),
-    [signedIn, guestSession, loading, authError, signIn, signOut, continueAsGuest, clearAuthError]
+    [
+      signedIn,
+      guestSession,
+      loading,
+      authError,
+      signIn,
+      startSignIn,
+      startSignUp,
+      signOut,
+      continueAsGuest,
+      clearAuthError,
+    ]
   );
 
   return (
@@ -162,7 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
       <SignInSheet
         visible={sheetVisible}
-        trouble={sheetTrouble}
+        initialMode={sheetMode}
         session={sheetSession}
         onSignIn={startOAuth}
         onOpenLink={openHelpLink}
