@@ -116,19 +116,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSheetVisible(true);
   }, []);
 
+  // Help pages open in Safari / the system browser while the sheet stays put.
+  // (Hiding the sheet to show the in-app browser raced the Modal's dismiss
+  // animation on iOS: the browser silently failed to open and the sheet
+  // popped right back with the step checked off.) When they switch back to
+  // the app, the sheet is still there with their progress.
   const openHelpLink = useCallback(async (url: string) => {
-    setSheetVisible(false);
-    await wait(350);
     try {
-      await WebBrowser.openBrowserAsync(url, {
-        dismissButtonStyle: 'close',
-        presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
-      });
-    } catch {
       await Linking.openURL(url);
+    } catch (e) {
+      console.warn('Could not open help link', url, e);
     }
-    // Back from setting a password / filling the form — Sign in is right there.
-    setSheetVisible(true);
   }, []);
 
   const signOut = useCallback(async () => {

@@ -31,8 +31,7 @@ export function SignInSheet({
   // top. (It is NOT bumped when we return from a help page mid-sign-up.)
   session: number;
   onSignIn: () => void;
-  // Opens a help page. The provider hides this sheet first (iOS can't
-  // present the in-app browser over a Modal), then brings it back after.
+  // Opens a help page in the system browser; this sheet stays open behind it.
   onOpenLink: (url: string) => void;
   onClose: () => void;
 }) {
