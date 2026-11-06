@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, View, ViewStyle } from 'react-native';
+import { FontScaleCap, Text } from './Text';
 import { Palette, radius, spacing, useColors } from '../theme';
 
 export function PrimaryButton({
@@ -30,7 +31,12 @@ export function PrimaryButton({
         style,
       ]}
     >
-      <Text style={[styles.label, { color: palette.fg }]}>{label}</Text>
+      <Text
+        maxFontSizeMultiplier={FontScaleCap.control}
+        style={[styles.label, { color: palette.fg }]}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Linking, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { FontScaleCap, Text } from '../components/Text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { Palette, radius, spacing, Typography, useColors, useTypography } from '../theme';
@@ -293,7 +294,10 @@ function Step({
   const content = (
     <View style={styles.stepRow}>
       <View style={[styles.stepBadge, active && styles.stepBadgeActive, done && styles.stepBadgeDone]}>
-        <Text style={[styles.stepBadgeText, (active || done) && styles.onPeach]}>
+        <Text
+          maxFontSizeMultiplier={FontScaleCap.control}
+          style={[styles.stepBadgeText, (active || done) && styles.onPeach]}
+        >
           {done ? '✓' : n}
         </Text>
       </View>

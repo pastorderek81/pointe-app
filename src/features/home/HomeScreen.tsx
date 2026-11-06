@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ImageSourcePropType, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ImageSourcePropType, Linking, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { FontScaleCap, Text } from '../../components/Text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Hero } from './Hero';
 import { ActionChipRow, Chip } from './ActionChipRow';
@@ -188,14 +189,14 @@ export function HomeScreen({ navigation }: any) {
               hitSlop={12}
               style={({ pressed }) => [styles.gearBtn, pressed && { opacity: 0.7 }]}
             >
-              <Text style={styles.gearGlyph}>🔔</Text>
+              <Text maxFontSizeMultiplier={FontScaleCap.icon} style={styles.gearGlyph}>🔔</Text>
             </Pressable>
             <Pressable
               onPress={() => navigation.navigate('Settings')}
               hitSlop={12}
               style={({ pressed }) => [styles.gearBtn, pressed && { opacity: 0.7 }]}
             >
-              <Text style={styles.gearGlyph}>⚙</Text>
+              <Text maxFontSizeMultiplier={FontScaleCap.icon} style={styles.gearGlyph}>⚙</Text>
             </Pressable>
           </View>
         }
@@ -255,7 +256,7 @@ export function HomeScreen({ navigation }: any) {
             onPress={() => Linking.openURL(sermonNotesUrl)}
             style={({ pressed }) => [styles.notesBtn, pressed && { opacity: 0.85 }]}
           >
-            <Text style={styles.notesGlyph}>✜</Text>
+            <Text maxFontSizeMultiplier={FontScaleCap.icon} style={styles.notesGlyph}>✜</Text>
             <View style={{ flex: 1 }}>
               <Text style={styles.notesTitle}>Sermon Notes</Text>
               <Text style={styles.notesSub}>Open in YouVersion Bible app</Text>

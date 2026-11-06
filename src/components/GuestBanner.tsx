@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { Text } from './Text';
 import { Palette, radius, spacing, Typography, useColors, useTypography } from '../theme';
 
 // Small "Sign in for more" prompt shown above Groups/Events lists when the

@@ -7,9 +7,9 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
+import { Text } from '../../components/Text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MessageCard } from './MessageCard';
 import { SectionHeader } from '../../components/SectionHeader';
@@ -221,14 +221,17 @@ function makeStyles(colors: Palette, typography: Typography) {
       borderWidth: 1,
       borderColor: colors.line,
     },
+    // Thumbnail stretches with the row when larger text makes the title
+    // wrap, instead of leaving the text squeezed against the card edge.
     thumb: {
       width: 130,
-      height: 76,
+      minHeight: 76,
       backgroundColor: colors.surface,
     },
     rowText: {
       flex: 1,
       paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
       justifyContent: 'center',
     },
     rowSaveBtn: {

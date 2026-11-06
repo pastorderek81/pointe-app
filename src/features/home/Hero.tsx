@@ -1,5 +1,6 @@
 import React from 'react';
-import { Dimensions, ImageBackground, ImageSourcePropType, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, ImageBackground, ImageSourcePropType, StyleSheet, View } from 'react-native';
+import { Text } from '../../components/Text';
 import { LinearGradient } from 'expo-linear-gradient';
 import { colors, radius, spacing, typography } from '../../theme';
 import { LiveBadge } from './LiveBadge';
@@ -37,7 +38,7 @@ export function Hero({
 
   return (
     <View style={styles.wrap}>
-      <View style={[styles.topBar, { height: TOPBAR_HEIGHT }]}>
+      <View style={[styles.topBar, { minHeight: TOPBAR_HEIGHT }]}>
         {isLive ? <LiveBadge /> : null}
         <View style={{ flex: 1 }} />
         {rightSlot}

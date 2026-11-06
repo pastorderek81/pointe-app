@@ -1,5 +1,6 @@
 import React from 'react';
-import { Text } from 'react-native';
+import { useWindowDimensions } from 'react-native';
+import { FontScaleCap, Text } from '../components/Text';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { HomeScreen } from '../features/home/HomeScreen';
 import { MediaScreen } from '../features/media/MediaScreen';
@@ -13,13 +14,24 @@ const Tab = createBottomTabNavigator();
 // Lightweight glyph icons — no external icon dep needed for v1.
 function TabIcon({ glyph, color, focused }: { glyph: string; color: string; focused: boolean }) {
   return (
-    <Text style={{ fontSize: focused ? 20 : 18, color, opacity: focused ? 1 : 0.85 }}>{glyph}</Text>
+    <Text
+      maxFontSizeMultiplier={FontScaleCap.icon}
+      style={{ fontSize: focused ? 20 : 18, color, opacity: focused ? 1 : 0.85 }}
+    >
+      {glyph}
+    </Text>
   );
 }
 
 export function RootTabs() {
   const colors = useColors();
   const typography = useTypography();
+  // The bar used to be a fixed 84pt tall, so with a larger phone text size
+  // the labels got pushed into the bottom edge. Labels now grow (up to a
+  // cap) and the bar grows with them. At normal text size it's unchanged.
+  const { fontScale } = useWindowDimensions();
+  const labelScale = Math.min(Math.max(fontScale, 1), FontScaleCap.control);
+  const barHeight = 84 + Math.ceil(16 * (labelScale - 1));
   return (
     <Tab.Navigator
       screenOptions={{
@@ -29,16 +41,26 @@ export function RootTabs() {
         tabBarStyle: {
           backgroundColor: colors.white,
           borderTopColor: colors.line,
-          height: 84,
+          height: barHeight,
           paddingTop: 8,
           paddingBottom: 24,
         },
-        tabBarLabelStyle: {
-          fontFamily: typography.label.fontFamily,
-          fontSize: 10,
-          letterSpacing: 1.0,
-          marginTop: 2,
-        },
+        tabBarLabel: ({ color, children }) => (
+          <Text
+            numberOfLines={1}
+            maxFontSizeMultiplier={FontScaleCap.control}
+            style={{
+              color,
+              fontFamily: typography.label.fontFamily,
+              fontSize: 10,
+              letterSpacing: 1.0,
+              marginTop: 2,
+              textAlign: 'center',
+            }}
+          >
+            {children}
+          </Text>
+        ),
       }}
     >
       <Tab.Screen

@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { ImageBackground, ImageSourcePropType, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ImageBackground, ImageSourcePropType, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '../../components/Text';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as WebBrowser from 'expo-web-browser';
 import { Palette, radius, shadow, spacing, Typography, useColors, useTypography } from '../../theme';
@@ -72,7 +73,9 @@ function makeStyles(colors: Palette, typography: Typography) {
     },
     cardWrap: {
       width: CARD_W,
-      height: CARD_H,
+      // minHeight (not height) so a card grows instead of cutting off the
+      // title when someone uses a larger text size.
+      minHeight: CARD_H,
       borderRadius: radius.lg,
       overflow: 'hidden',
       backgroundColor: colors.inkSurface,

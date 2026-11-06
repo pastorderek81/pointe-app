@@ -1,5 +1,6 @@
 import React from 'react';
-import { ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ImageBackground, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { FontScaleCap, Text } from '../../components/Text';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PrimaryButton } from '../../components/PrimaryButton';
@@ -23,54 +24,65 @@ export function WelcomeScreen() {
         />
 
         <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
-          <View style={styles.top}>
-            <Text style={styles.brand}>THE POINTE CHURCH</Text>
-            <Text style={styles.brandSub}>COCOA BEACH · FL</Text>
-          </View>
+          {/* Scrolls only when it has to: with a large phone text size the
+              content is taller than the screen, and without this the buttons
+              were pushed off the bottom with no way to reach them. */}
+          <ScrollView
+            contentContainerStyle={styles.scroll}
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+          >
+            <View style={styles.top}>
+              <Text style={styles.brand}>THE POINTE CHURCH</Text>
+              <Text style={styles.brandSub}>COCOA BEACH · FL</Text>
+            </View>
 
-          <View style={styles.bottom}>
-            <Text style={styles.eyebrow}>WELCOME HOME</Text>
-            <Text style={styles.title}>You belong here.</Text>
-            <Text style={styles.body}>
-              Sign in for your groups, events, and more — or look around as a guest.
-            </Text>
+            <View style={styles.bottom}>
+              <Text style={styles.eyebrow}>WELCOME HOME</Text>
+              <Text style={styles.title}>You belong here.</Text>
+              <Text style={styles.body}>
+                Sign in for your groups, events, and more — or look around as a guest.
+              </Text>
 
-            {authError ? (
-              <View style={styles.errorBanner}>
-                <Text style={styles.errorTitle}>Sign-in failed</Text>
-                <Text style={styles.errorBody}>{authError}</Text>
-              </View>
-            ) : null}
+              {authError ? (
+                <View style={styles.errorBanner}>
+                  <Text style={styles.errorTitle}>Sign-in failed</Text>
+                  <Text style={styles.errorBody}>{authError}</Text>
+                </View>
+              ) : null}
 
-            {/* Planning Center is explained on the next sheet, after they've
-                chosen — naming it up front scared people off signing in. */}
-            <PrimaryButton
-              label={configured ? 'Sign in' : 'Sign-in not yet configured'}
-              variant="peach"
-              onPress={startSignIn}
-              style={{ marginTop: spacing.lg }}
-            />
+              {/* Planning Center is explained on the next sheet, after they've
+                  chosen — naming it up front scared people off signing in. */}
+              <PrimaryButton
+                label={configured ? 'Sign in' : 'Sign-in not yet configured'}
+                variant="peach"
+                onPress={startSignIn}
+                style={{ marginTop: spacing.lg }}
+              />
 
-            <Pressable
-              onPress={startSignUp}
-              style={({ pressed }) => [styles.outlineBtn, pressed && { opacity: 0.7 }]}
-              accessibilityRole="button"
-            >
-              <Text style={styles.outlineLabel}>Set up an account</Text>
-            </Pressable>
+              <Pressable
+                onPress={startSignUp}
+                style={({ pressed }) => [styles.outlineBtn, pressed && { opacity: 0.7 }]}
+                accessibilityRole="button"
+              >
+                <Text maxFontSizeMultiplier={FontScaleCap.control} style={styles.outlineLabel}>
+                  Set up an account
+                </Text>
+              </Pressable>
 
-            <Pressable
-              onPress={continueAsGuest}
-              hitSlop={8}
-              style={({ pressed }) => [styles.guestBtn, pressed && { opacity: 0.7 }]}
-            >
-              <Text style={styles.guestLabel}>Continue as guest</Text>
-            </Pressable>
+              <Pressable
+                onPress={continueAsGuest}
+                hitSlop={8}
+                style={({ pressed }) => [styles.guestBtn, pressed && { opacity: 0.7 }]}
+              >
+                <Text style={styles.guestLabel}>Continue as guest</Text>
+              </Pressable>
 
-            <Text style={styles.fineprint}>
-              You can sign in anytime from Settings.
-            </Text>
-          </View>
+              <Text style={styles.fineprint}>
+                You can sign in anytime from Settings.
+              </Text>
+            </View>
+          </ScrollView>
         </SafeAreaView>
       </ImageBackground>
     </View>
@@ -80,7 +92,8 @@ export function WelcomeScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.inkDeep },
   bg: { flex: 1 },
-  safe: { flex: 1, paddingHorizontal: spacing.lg, justifyContent: 'space-between' },
+  safe: { flex: 1, paddingHorizontal: spacing.lg },
+  scroll: { flexGrow: 1, justifyContent: 'space-between' },
   top: { paddingTop: spacing.lg },
   brand: {
     ...typography.label,
