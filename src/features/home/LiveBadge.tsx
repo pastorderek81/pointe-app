@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, StyleSheet, View } from 'react-native';
+import { Text } from '../../components/Text';
 import { Palette, radius, spacing, Typography, useColors, useTypography } from '../../theme';
 
 export function LiveBadge() {

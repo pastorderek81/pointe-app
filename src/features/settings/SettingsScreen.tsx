@@ -1,7 +1,8 @@
 // Settings sits behind a gear icon on Home. Holds account + notification
 // prefs + church info — the kind of stuff users only need occasionally.
 import React, { useEffect, useMemo, useState } from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { Text } from '../../components/Text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card } from '../../components/Card';
 import { PrimaryButton } from '../../components/PrimaryButton';

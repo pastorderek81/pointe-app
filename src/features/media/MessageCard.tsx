@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { ImageBackground, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ImageBackground, Pressable, StyleSheet, View } from 'react-native';
+import { FontScaleCap, Text } from '../../components/Text';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Palette, radius, shadow, spacing, Typography, useColors, useTypography } from '../../theme';
 
@@ -41,8 +42,8 @@ export function MessageCard({
             style={StyleSheet.absoluteFill}
           />
           <View style={styles.playPill}>
-            <Text style={styles.playGlyph}>▶</Text>
-            <Text style={styles.playLabel}>WATCH</Text>
+            <Text maxFontSizeMultiplier={FontScaleCap.control} style={styles.playGlyph}>▶</Text>
+            <Text maxFontSizeMultiplier={FontScaleCap.control} style={styles.playLabel}>WATCH</Text>
           </View>
           <View style={styles.text}>
             <Text style={[styles.title, size === 'small' && styles.titleSmall]} numberOfLines={2}>
@@ -58,7 +59,10 @@ export function MessageCard({
           hitSlop={8}
           style={({ pressed }) => [styles.saveBtn, pressed && { opacity: 0.8 }]}
         >
-          <Text style={[styles.saveGlyph, saved && { color: colors.peachDeep }]}>
+          <Text
+            maxFontSizeMultiplier={FontScaleCap.icon}
+            style={[styles.saveGlyph, saved && { color: colors.peachDeep }]}
+          >
             {saved ? '♥' : '♡'}
           </Text>
         </Pressable>
@@ -69,16 +73,22 @@ export function MessageCard({
 
 function makeStyles(colors: Palette, typography: Typography) {
   return StyleSheet.create({
+    // minHeight (not height) so the card grows with larger text sizes
+    // instead of clipping the title.
     wrap: {
-      height: 240,
+      minHeight: 240,
       borderRadius: radius.lg,
       overflow: 'hidden',
       backgroundColor: colors.inkSurface,
     },
     fill: { flex: 1 },
-    small: { height: 160 },
+    small: { minHeight: 160 },
     bg: { flex: 1, justifyContent: 'flex-end' },
-    text: { padding: spacing.md },
+    // paddingTop keeps room for the WATCH pill and heart button, which sit
+    // on top of the image. Text is bottom-aligned, so at normal sizes this
+    // changes nothing; with large text the card grows rather than letting
+    // the title run under those buttons.
+    text: { padding: spacing.md, paddingTop: spacing.md + 40 + spacing.sm },
     title: {
       ...typography.h1,
       color: '#ffffff',

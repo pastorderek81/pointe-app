@@ -14,9 +14,9 @@ import {
   ImageSourcePropType,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
+import { FontScaleCap, Text } from '../../components/Text';
 import * as WebBrowser from 'expo-web-browser';
 import { LinearGradient } from 'expo-linear-gradient';
 import { HeroCarousel } from './HeroCarousel';
@@ -97,7 +97,9 @@ export function PageHero({ hero }: { hero: HeroContent }) {
                 onPress={() => openCta(hero.ctaUrl!)}
                 style={({ pressed }) => [styles.ctaBtn, pressed && { opacity: 0.85 }]}
               >
-                <Text style={styles.ctaLabel}>{hero.ctaLabel}</Text>
+                <Text maxFontSizeMultiplier={FontScaleCap.control} style={styles.ctaLabel}>
+                  {hero.ctaLabel}
+                </Text>
               </Pressable>
             )}
           </View>

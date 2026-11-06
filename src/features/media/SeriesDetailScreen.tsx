@@ -7,9 +7,9 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
+import { FontScaleCap, Text } from '../../components/Text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { fetchPlaylistVideos, YouTubeVideo, youtubeWatchUrl } from './youtube';
 import { useSavedSermons } from './savedSermons';
@@ -65,7 +65,7 @@ export function SeriesDetailScreen({ route, navigation }: any) {
           hitSlop={12}
           style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}
         >
-          <Text style={styles.backGlyph}>‹</Text>
+          <Text maxFontSizeMultiplier={FontScaleCap.icon} style={styles.backGlyph}>‹</Text>
         </Pressable>
       </View>
       <ScrollView
@@ -215,14 +215,17 @@ function makeStyles(colors: Palette, typography: Typography) {
       borderWidth: 1,
       borderColor: colors.line,
     },
+    // Thumbnail stretches with the row when larger text makes the title
+    // wrap, instead of leaving the text squeezed against the card edge.
     thumb: {
       width: 130,
-      height: 76,
+      minHeight: 76,
       backgroundColor: colors.surface,
     },
     rowText: {
       flex: 1,
       paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
       justifyContent: 'center',
     },
     rowSaveBtn: {

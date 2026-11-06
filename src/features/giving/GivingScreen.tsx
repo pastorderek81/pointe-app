@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, ScrollView, StyleSheet, View } from 'react-native';
+import { Text } from '../../components/Text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Card } from '../../components/Card';
 import { PrimaryButton } from '../../components/PrimaryButton';

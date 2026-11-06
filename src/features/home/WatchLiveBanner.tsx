@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { Animated, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Linking, Pressable, StyleSheet, View } from 'react-native';
+import { Text } from '../../components/Text';
 import { youtubeLiveUrl } from '../media/youtube';
 import { Palette, spacing, Typography, useColors, useTypography } from '../../theme';
 

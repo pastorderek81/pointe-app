@@ -6,9 +6,9 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from 'react-native';
+import { FontScaleCap, Text } from '../../components/Text';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as WebBrowser from 'expo-web-browser';
 import { Card } from '../../components/Card';
@@ -174,7 +174,9 @@ export function EventsScreen() {
                         onPress={() => openInBrowser(s.infoUrl!)}
                         style={({ pressed }) => [styles.infoBtn, pressed && { opacity: 0.85 }]}
                       >
-                        <Text style={styles.infoLabel}>More Info</Text>
+                        <Text maxFontSizeMultiplier={FontScaleCap.control} style={styles.infoLabel}>
+                          More Info
+                        </Text>
                       </Pressable>
                     ) : null}
                     {s.registrationUrl ? (
@@ -182,7 +184,9 @@ export function EventsScreen() {
                         onPress={() => openInBrowser(s.registrationUrl!)}
                         style={({ pressed }) => [styles.signUpBtn, pressed && { opacity: 0.85 }]}
                       >
-                        <Text style={styles.signUpLabel}>Sign Up</Text>
+                        <Text maxFontSizeMultiplier={FontScaleCap.control} style={styles.signUpLabel}>
+                          Sign Up
+                        </Text>
                       </Pressable>
                     ) : null}
                   </View>
@@ -234,10 +238,11 @@ function makeStyles(colors: Palette, typography: Typography) {
       borderWidth: 1,
       borderRadius: radius.pill,
       paddingVertical: spacing.md - 2,
-      paddingHorizontal: spacing.lg,
+      paddingHorizontal: spacing.md,
     },
     infoLabel: {
       ...typography.h3,
+      textAlign: 'center',
       color: colors.skyDeep,
       fontSize: 15,
     },
@@ -248,10 +253,11 @@ function makeStyles(colors: Palette, typography: Typography) {
       backgroundColor: colors.skyDeep,
       borderRadius: radius.pill,
       paddingVertical: spacing.md - 2,
-      paddingHorizontal: spacing.lg,
+      paddingHorizontal: spacing.md,
     },
     signUpLabel: {
       ...typography.h3,
+      textAlign: 'center',
       color: '#ffffff',
       fontSize: 15,
     },

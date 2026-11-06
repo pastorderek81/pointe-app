@@ -7,7 +7,8 @@
 // Shows when iOS hasn't been asked yet AND the user hasn't tapped "Not now"
 // previously. Dismissal is sticky (SecureStore key, versioned).
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { Text } from '../../components/Text';
 import * as SecureStore from 'expo-secure-store';
 import { Card } from '../../components/Card';
 import { PrimaryButton } from '../../components/PrimaryButton';
